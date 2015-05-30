@@ -7,6 +7,16 @@ app = Bottle()
 jinja2_template = partial(jinja2_view, template_lookup=['templates'])
 
 
+def parse_question_folder():
+    """Parse all questions under questions/ and return file mapping."""
+    q_pths = Path('questions').glob('q_*.py')
+    extract_q_name = re.compile('^q_(.+)$').match
+    return {
+        extract_q_name(pth.stem).group(1): pth
+        for pth in q_pths
+    }
+
+
 @app.route('/', method='GET')
 @jinja2_template('index.html')
 def index(msg=''):
@@ -16,11 +26,9 @@ def index(msg=''):
 @app.route('/question/', method='GET')
 @jinja2_template('questions.html')
 def list_question():
-    questions = Path('questions').glob('q_*.py')
-    extract_q_name = re.compile('^q_(.+)$').match
-
+    all_questions = parse_question_folder()
     return {
-        'questions': [extract_q_name(p.stem).group(1) for p in questions]
+        'questions': all_questions.keys()
     }
 
 import sqlite3
