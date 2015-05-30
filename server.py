@@ -192,15 +192,18 @@ _ins_result_sql = 'INSERT INTO RESULT (name, submit, codingtime, timestamp, judg
 def insert_result(**argd):
     with connect_db() as conn:
         try:
-            isql = _ins_result_sql + '("%s", "%s", "%s", date(\'now\'), "%s", "%s")' % (
-                argd['name'],
+            isql = _ins_result_sql + "(?, ?, ?, date('now'), ?, ?)"
+            conn.execute(
+                isql,
+                (argd['name'],
                 argd['submit'],
                 argd['codingtime'],
                 argd['judge'],
                 argd['gameid'])
-            conn.execute(isql)
+            )
             conn.commit()
-        except Exception:
+        except Exception as e:
+            print(e)
             return False
     return True
 
@@ -237,7 +240,16 @@ def submit_play():
 
     q_pth = 'questions/q_%s.py' % q_name
     importlib.reload(judger)
-    tp, test_output = judger.run_judge(q_pth, answer_text)
+    test_prog, test_output = judger.run_judge(q_pth, answer_text)
+
+    # insert result into db
+    insert_result(
+        name=player_name,
+        submit=answer_text,
+        codingtime="60",
+        judge=str(test_prog.success),
+        gameid=str(game['id'])
+    )
 
     history = ''
     return {
