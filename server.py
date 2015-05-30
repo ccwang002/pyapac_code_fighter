@@ -10,7 +10,7 @@ jinja2_template = partial(jinja2_view, template_lookup=['templates'])
 @app.route('/', method='GET')
 @jinja2_template('index.html')
 def index(msg=''):
-    return {'msg': msg}
+    return {'msg': 'abc'}
 
 
 @app.route('/question/', method='GET')
@@ -22,6 +22,14 @@ def list_question():
     return {
         'questions': [extract_q_name(p.name).group(1) for p in questions]
     }
+
+@app.route('/play/', method='POST')
+@jinja2_template('play.html')
+def play():
+
+
+
+
 
 
 if __name__ == '__main__':
