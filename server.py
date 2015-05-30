@@ -6,6 +6,9 @@ import re
 app = Bottle()
 jinja2_template = partial(jinja2_view, template_lookup=['templates'])
 
+@app.route('/static/<path:path>')
+def callback(path):
+    return static_file(path, './static')
 
 @app.route('/', method='GET')
 @jinja2_template('index.html')

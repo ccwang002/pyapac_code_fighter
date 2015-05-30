@@ -1,15 +1,27 @@
 {% extends 'base.html' %}
-
+{% block css %}
+<meta charset="utf-8"/>
+        <style type="text/css">
+      .CodeMirror {border-top: 1px solid #eee; border-bottom: 1px solid #eee;}
+    </style>
+<link rel="stylesheet" href="/static/lib/codemirror.css">
+<script src="/static/lib/codemirror.js"></script>
+{% endblock css%}
 {% block content %}
-{% if msg %}
-<div class="row">
-  <div class="col-sm-10 col-sm-offset-1">
-    <div class="alert alert-success" role="alert">
-      <p>{{ msg }}</p>
-    </div>
-  </div><!-- /.col -->
-</div><!-- /.row -->
-{% endif %}
+
+<script src="/static/mode/clike/clike.js"></script>
+
+
+
+<form><textarea id="code" name="code">
+ d
+    d
+    d
+    d
+    d
+
+</textarea>
+</form>
 <div class="row">
   <div class="col-sm-10 col-sm-offset-1">
     <div class="panel panel-info">
