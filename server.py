@@ -213,6 +213,7 @@ def submit(question_name='foo'):
     tp, test_output = judger.run_judge(q_pth, ans_text)
     return test_output
 
+
 @app.route('/play/', method='GET')
 @jinja2_template('play.html')
 def play():
@@ -223,6 +224,30 @@ def play():
         'q_desc': q_desc,
         'q_doc': q_doc,
         'example_ans': q_ex_ans
+    }
+
+
+@app.route('/play/', method='POST')
+@jinja2_template('play.html')
+def submit_play():
+    game = get_games()[-1]
+    q_name, q_desc, q_doc, q_ex_ans = read_question(game['name'])
+    player_name = request.forms.get('player_name')
+    answer_text = request.forms.get('code')
+
+    q_pth = 'questions/q_%s.py' % q_name
+    importlib.reload(judger)
+    tp, test_output = judger.run_judge(q_pth, answer_text)
+
+    history = ''
+    return {
+        'q_name': q_name,
+        'q_desc': q_desc,
+        'q_doc': q_doc,
+        'example_ans': answer_text,
+        'player_name': player_name,
+        'result': test_output,
+        'history': history
     }
 
 
