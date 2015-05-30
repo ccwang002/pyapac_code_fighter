@@ -240,14 +240,15 @@ def doAdmin():
     if operation == 'create':
         #create new game
         qname = request.forms.get('gamename','')
-        if qname and qname in parse_question_folders().keys():
+        if qname and qname in parse_question_folder().keys():
             if not insert_games( [ {'name':qname, 'question':'empty'},]):
                 msg.append('Error: Cannot Create Game! %s' % qname)
             else:
                 msg.append('SUCCESS Create Game! %s' % qname)
     else:
         #random generate game
-        qname = random.choice( parse_question_folders().keys() )
+        keys = list(parse_question_folder().keys())
+        qname = random.choice(  keys )
         if not insert_games( [ {'name':qname, 'question':'empty'},]):
             msg.append('Error: Cannot Create Game! %s' % qname)
         else:
