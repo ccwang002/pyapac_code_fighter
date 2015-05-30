@@ -10,5 +10,9 @@ pip install -r requirements.txt
 ## Run
 
 ```bash
-python -m bottle -b localhost:8888 server:app
+# debug
+python server.py
+
+# listen to all interfaces
+python -m bottle -b 0.0.0.0:8888 server:app
 ```
