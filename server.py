@@ -1,4 +1,4 @@
-from bottle import Bottle, jinja2_view, run, abort, static_file, request
+from bottle import Bottle, jinja2_view, run, abort, static_file, request, get, post
 from functools import partial
 from pathlib import Path
 import re
@@ -176,11 +176,61 @@ def judge():
     return {'msg': 'judge'}
 
 
-@app.route('/admin/', method='GET')
+@app.route('/gameadmin/', method='GET')
 @jinja2_template('admin.html')
-def admin():
-    return {'msg': 'admin'}
+def admin(msg='welcome'):
+    r_form = '''\
+            <form action="/gameadmin/" method="post" id="adminform">
+            CreateGame: <input name="gamename" type="text" />
+            <input name="operation" id="operation" value="" type="hidden" />
+            <input name="create" value="Create" type="button" onClick="Create()"/>
+            <input name="random" value="Random" type="button" onClick="Random()"/>
+            </form>
+    '''
+    r_js_form = '''
+    function Create(e) {
+        document.getElementById("operation").value = "Create";
+        console.log(document.getElementById("operation").value);
+        document.getElementById("adminform").submit();
+        return false;
+    }
+    function Random(e) {
+        document.getElementById("operation").value = "Random";
+        console.log(document.getElementById("operation").value);
+        document.getElementById("adminform").submit();
+        return false;
+    }
+    '''
+    return {'msg':msg,
+            'form': r_form,
+            'js':r_js_form}
 
+
+import random
+
+@app.route('/gameadmin/', method='POST')
+@jinja2_template('admin.html')
+def doAdmin():
+    operation = request.forms.get('operation','Random').lower()
+    print('%s' % request.forms.get('operation',''))
+    msg = []
+    print(list_question())
+    if operation == 'create':
+        #create new game
+        qname = request.forms.get('gamename','')
+        if qname and qname in parse_question_folders().keys():
+            if not insert_games( [ {'name':qname, 'question':'empty'},]):
+                msg.append('Error: Cannot Create Game! %s' % qname)
+            else:
+                msg.append('SUCCESS Create Game! %s' % qname)
+    else:
+        #random generate game
+        qname = random.choice( parse_question_folders().keys() )
+        if not insert_games( [ {'name':qname, 'question':'empty'},]):
+            msg.append('Error: Cannot Create Game! %s' % qname)
+        else:
+            msg.append('SUCCESS Create Game! %s' % qname)
+    return admin(msg=';'.join(msg))
 
 @app.route('/test/', method='GET')
 @jinja2_template('admin.html')
