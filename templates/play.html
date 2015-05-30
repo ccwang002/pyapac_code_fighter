@@ -1,23 +1,41 @@
 {% extends 'base.html' %}
 
+{% block css %}
+<link rel="stylesheet" href="/static/libs/CodeMirror/lib/codemirror.css">
+<link rel="stylesheet" href="/static/libs/CodeMirror/theme/mdn-like.css">
+<style>
+.CodeMirror {
+  border: 1px solid #eee;
+  min-height: 200px;
+  height: auto;
+}
+</style>
+{% endblock %}
+{% block headjs %}
+<script src="/static/libs/CodeMirror/lib/codemirror.js" type="text/javascript" charset="utf-8"></script>
+<script src="/static/libs/CodeMirror/addon/edit/matchbrackets.js" type="text/javascript" charset="utf-8"></script>
+<script src="/static/libs/CodeMirror/mode/python/python.js" type="text/javascript" charset="utf-8"></script>
+{% endblock %}
 {% block content %}
-{% if msg %}
 <div class="row">
   <div class="col-sm-10 col-sm-offset-1">
-    <div class="alert alert-success" role="alert">
-      <p>{{ msg }}</p>
-    </div>
-  </div><!-- /.col -->
-</div><!-- /.row -->
-{% endif %}
-<div class="row">
-  <div class="col-sm-10 col-sm-offset-1">
-    <div class="panel panel-info">
-      <div class="panel-heading">Code Fighter</div>
-      <div class="panel-body">
-        <p>Welcome to Code Fighter!</p>
-      </div>
-    </div>
+    <textarea name="code" id="code">{{ initial_code }}</textarea>
   </div><!-- /.col -->
 </div><!-- /.row -->
 {% endblock content %}
+
+{% block js %}
+<script>
+var editor = CodeMirror.fromTextArea(document.getElementById("code"), {
+  mode: {name: "python",
+    version: 3,
+    singleLineStringErrors: false},
+  lineNumbers: true,
+  indentUnit: 4,
+  matchBrackets: true,
+  lineWrapping: true,
+  theme: 'mdn-like',
+});
+</script>
+{% endblock %}
+

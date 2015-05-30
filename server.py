@@ -1,10 +1,27 @@
-from bottle import Bottle, jinja2_view, run, abort, static_file, request, get, post
+from bottle import (
+    Bottle, jinja2_view, run,
+    abort, static_file, request,
+)
+
 from functools import partial
+import importlib
+import judger
 from pathlib import Path
 import re
+import sqlite3
 
 app = Bottle()
 jinja2_template = partial(jinja2_view, template_lookup=['templates'])
+
+
+def parse_question_folder():
+    """Parse all questions under questions/ and return file mapping."""
+    q_pths = Path('questions').glob('q_*.py')
+    extract_q_name = re.compile('^q_(.+)$').match
+    return {
+        extract_q_name(pth.stem).group(1): pth
+        for pth in q_pths
+    }
 
 
 @app.route('/', method='GET')
@@ -16,14 +33,11 @@ def index(msg=''):
 @app.route('/question/', method='GET')
 @jinja2_template('questions.html')
 def list_question():
-    questions = Path('questions').glob('q_*.py')
-    extract_q_name = re.compile('^q_(.+)$').match
-
+    all_questions = parse_question_folder()
     return {
-        'questions': [extract_q_name(p.stem).group(1) for p in questions]
+        'questions': all_questions.keys()
     }
 
-import sqlite3
 
 _db_name = 'codegame.db'
 _db_backup = 'codegame.prv.db'
@@ -164,6 +178,14 @@ def insert_result(**argd):
     return True
 
 
+@app.route('/test-submit/<question_name>/', method='GET')
+def submit(question_name='foo'):
+    q_pth = 'questions/q_%s.py' % question_name
+    ans_text = ''
+    importlib.reload(judger)
+    tp, test_output = judger.run_judge(q_pth, ans_text)
+    return test_output
+
 @app.route('/play/', method='GET')
 @jinja2_template('play.html')
 def play():
@@ -250,6 +272,12 @@ def testdb():
     if not msg:
         msg.append('All Test Success!')
     return {'msg': ';'.join(msg)}
+
+
+@app.route('/static/<path:path>')
+def get_static_file(path):
+    return static_file(path, './static')
+
 
 if __name__ == '__main__':
     run(app, host='localhost', port=8080, debug=True, reloader=True)
