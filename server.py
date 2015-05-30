@@ -20,7 +20,7 @@ def list_question():
     extract_q_name = re.compile('^q_(.+)$').match
 
     return {
-        'questions': [extract_q_name(p.name).group(1) for p in questions]
+        'questions': [extract_q_name(p.stem).group(1) for p in questions]
     }
 
 import sqlite3
