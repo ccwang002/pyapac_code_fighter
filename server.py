@@ -39,6 +39,33 @@ def list_question():
     }
 
 
+def read_question(q_name):
+    q_pth = parse_question_folder()[q_name]
+    doc_string = []
+    answer_example = []
+    with q_pth.open() as f:
+        # read doc string
+        for line in f:
+            if line.strip() in ["'''", '"""']:
+                break
+            doc_string.append(line)
+
+        # read answer example
+        reading_ans = False
+        for line in f:
+            if line.startswith('def answer('):
+                reading_ans = True
+            if not reading_ans:
+                continue
+            answer_example.append(line)
+            if line.startswith('    return '):
+                break
+    doc_string[0] = doc_string[0][len("'''"):]
+    q_name, q_desc = doc_string[0][len('Question '):].split(': ', 1)
+    doc_string = doc_string[2:]
+    return q_name, q_desc, ''.join(doc_string), ''.join(answer_example)
+
+
 _db_name = 'codegame.db'
 _db_backup = 'codegame.prv.db'
 #create default table
@@ -189,7 +216,14 @@ def submit(question_name='foo'):
 @app.route('/play/', method='GET')
 @jinja2_template('play.html')
 def play():
-    return {'msg': 'play'}
+    game = get_games()[-1]
+    q_name, q_desc, q_doc, q_ex_ans = read_question(game['name'])
+    return {
+        'q_name': q_name,
+        'q_desc': q_desc,
+        'q_doc': q_doc,
+        'example_ans': q_ex_ans
+    }
 
 
 @app.route('/judge/', method='GET')
@@ -260,7 +294,7 @@ def doAdmin():
 def testdb():
     reload_db()
     msg = []
-    if not insert_games([{'name': 'foo', 'question': 'bar'}]):
+    if not insert_games([{'name': 'foo', 'question': 'NO USE'}]):
         msg.append('insert db failed')
     games = get_games()
     if not games:

@@ -19,7 +19,14 @@
 {% block content %}
 <div class="row">
   <div class="col-sm-10 col-sm-offset-1">
-    <textarea name="code" id="code">{{ initial_code }}</textarea>
+    <h2>Question {{ q_name }} <small>{{ q_desc }}</small></h2>
+    <p><pre><code>{{ q_doc }}</code></pre></p>
+  </div>
+</div>
+<div class="row">
+  <div class="col-sm-10 col-sm-offset-1">
+    <h3>Answer</h3>
+    <textarea name="code" id="code">{{ example_ans }}</textarea>
   </div><!-- /.col -->
 </div><!-- /.row -->
 {% endblock content %}
