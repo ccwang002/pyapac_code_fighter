@@ -23,20 +23,183 @@ def list_question():
         'questions': [extract_q_name(p.name).group(1) for p in questions]
     }
 
+import sqlite3
+
+_db_name = 'codegame.db'
+_db_backup = 'codegame.prv.db'
+#create default table
+_create_db_tables_sql = '''\
+CREATE TABLE GAME (
+    id INTEGER PRIMARY KEY ASC AUTOINCREMENT,
+    name TEXT,
+    question TEXT,
+    timestamp DATETIME DEFAULT NULL
+);
+
+CREATE TABLE RESULT (
+    id INTEGER PRIMARY KEY ASC AUTOINCREMENT,
+    name TEXT,
+    submit TEXT,
+    codingtime TEXT,
+    timestamp DATETIME DEFAULT NULL,
+    judge TEXT,
+    gameid INTEGER,
+    FOREIGN KEY(gameid) REFERENCES GAME(id)
+);
+'''
+
+
+@app.route('/admin/', method='POST')
+def reload_db():
+    # if database does not exist, create a new one without renaming.
+    # otherwise move the original databse as xxx.prev
+    try:
+        Path(_db_name).rename(_db_backup)
+        db_existed = True
+    except OSError as e:
+        db_existed = False
+    # recreate the database. If any move fails, move back the original databse.
+    try:
+        conn = sqlite3.connect(_db_name)
+        conn.executescript(_create_db_tables_sql)
+        conn.commit()
+    except Exception as e:
+        conn.close()
+        if db_existed:
+            Path(_db_name).unlink()
+            Path(_db_backup).rename(_db_name)
+        return False
+    else:
+        if db_existed:
+            Path(_db_backup).unlink()
+        return True
+
+
+# @app.route('/teacher/', method='POST')
+# def teacher():
+#     redirect('/teacher/{}/'.format(request.forms.get('teacherName')))
+
+
+def connect_db():
+    conn = sqlite3.connect(_db_name)
+    conn.row_factory = sqlite3.Row
+    return conn
+
+
+def get_games():
+    games = []
+    with connect_db() as conn:
+        records = conn.execute(
+            'SELECT * FROM GAME ORDER BY timestamp DESC'
+        ).fetchall()
+        try:
+            for record in records:
+                games.append(
+                    {'id': record['id'],
+                     'name': record['name'],
+                     'question': record['question'],
+                     's_time': record['timestamp']})
+
+        except:
+            pass
+    return games
+
+_insert_game_sql = 'INSERT INTO GAME (name, question, timestamp) VALUES %s '
+
+
+def insert_games(games=[]):
+    with connect_db() as conn:
+        for game in games:
+            vals = ','.join(['("%s", "%s", date(\'now\') )' % (item['name'], item['question'] ) for item in games])
+        try:
+            conn.execute(_insert_game_sql % vals)
+            conn.commit()
+        except:
+            return False
+    return True
+
+_get_result_sql = 'SELECT * FROM RESULT'
+_get_result_id_sql = ' WHERE RESULT.gameid = %s ORDER BY RESULT.name ASC'
+
+
+def get_results(gameid=''):
+    #list all game result
+    results = []
+    with connect_db() as conn:
+        if not gameid:
+            records = conn.execute(_get_result_sql).fetchall()
+        else:
+            records = conn.execute(_get_result_sql + _get_result_id_sql % gameid)
+        try:
+            for record in records:
+                results.append(
+                    {'id': record['id'],
+                     'name': record['name'],
+                     'submit': record['submit'],
+                     'codingtime': record['codingtime'],
+                     'timestamp': record['timestamp'],
+                     'judge': record['judge'],
+                     'gameid': record['gameid']})
+        except Exception:
+            pass
+    return results
+
+_ins_result_sql = 'INSERT INTO RESULT (name, submit, codingtime, timestamp, judge, gameid) VALUES '
+
+
+#insert result each by each
+def insert_result(**argd):
+    with connect_db() as conn:
+        try:
+            isql = _ins_result_sql + '("%s", "%s", "%s", date(\'now\'), "%s", "%s")' % (
+                argd['name'],
+                argd['submit'],
+                argd['codingtime'],
+                argd['judge'],
+                argd['gameid'])
+            conn.execute(isql)
+            conn.commit()
+        except Exception:
+            return False
+    return True
+
+
 @app.route('/play/', method='GET')
 @jinja2_template('play.html')
 def play():
     return {'msg': 'play'}
+
 
 @app.route('/judge/', method='GET')
 @jinja2_template('judge.html')
 def judge():
     return {'msg': 'judge'}
 
+
 @app.route('/admin/', method='GET')
 @jinja2_template('admin.html')
 def admin():
     return {'msg': 'admin'}
+
+
+@app.route('/test/', method='GET')
+@jinja2_template('admin.html')
+def testdb():
+    reload_db()
+    msg = []
+    if not insert_games([{'name': 'foo', 'question': 'bar'}]):
+        msg.append('insert db failed')
+    games = get_games()
+    if not games:
+        msg.append('there is no game in db')
+    if not insert_result(name='test_foo', submit='test_bar', codingtime='57', judge='Pass', gameid='0'):
+        msg.append('Add result failed')
+    record = get_results()
+    if not record:
+        msg.append('Get result failed')
+    if not msg:
+        msg.append('All Test Success!')
+    return {'msg': ';'.join(msg)}
 
 if __name__ == '__main__':
     run(app, host='localhost', port=8080, debug=True, reloader=True)
