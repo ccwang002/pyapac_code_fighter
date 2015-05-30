@@ -15,9 +15,20 @@
     <div class="panel panel-info">
       <div class="panel-heading">Code Fighter</div>
       <div class="panel-body">
-        <p>Welcome to Code Fighter!</p>
+        <p>Welcome to Code Fighter Admin!</p>
+        {% if form %}
+            {{ form }}
+        {% endif %}
       </div>
     </div>
   </div><!-- /.col -->
 </div><!-- /.row -->
 {% endblock content %}
+
+{% block js %}
+<script>
+        {% if js %}
+            {{ js }}
+        {% endif %}
+</script>
+{% endblock js %}
