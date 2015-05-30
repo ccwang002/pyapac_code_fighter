@@ -222,5 +222,11 @@ def testdb():
         msg.append('All Test Success!')
     return {'msg': ';'.join(msg)}
 
+
+@app.route('/static/<path:path>')
+def get_static_file(path):
+    return static_file(path, './static')
+
+
 if __name__ == '__main__':
     run(app, host='localhost', port=8080, debug=True, reloader=True)
