@@ -1,7 +1,13 @@
-from bottle import Bottle, jinja2_view, run, abort, static_file, request
+from bottle import (
+    Bottle, jinja2_view, run,
+    abort, static_file, request,
+)
 from functools import partial
+import importlib
+import judger
 from pathlib import Path
 import re
+import sqlite3
 
 app = Bottle()
 jinja2_template = partial(jinja2_view, template_lookup=['templates'])
@@ -31,7 +37,6 @@ def list_question():
         'questions': all_questions.keys()
     }
 
-import sqlite3
 
 _db_name = 'codegame.db'
 _db_backup = 'codegame.prv.db'
@@ -171,6 +176,14 @@ def insert_result(**argd):
             return False
     return True
 
+
+@app.route('/test-submit/<question_name>/', method='GET')
+def submit(question_name='foo'):
+    q_pth = 'questions/q_%s.py' % question_name
+    ans_text = ''
+    importlib.reload(judger)
+    tp, test_output = judger.run_judge(q_pth, ans_text)
+    return test_output
 
 @app.route('/play/', method='GET')
 @jinja2_template('play.html')
