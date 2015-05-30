@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width">
+    <title>{% block title %}Code Fighter - PyCon APAC 2015{% endblock title %}</title>
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+    {% block css %}{% endblock %}
+    {% block headjs %}{% endblock %}
+  </head>
+  <body>
+  {% block body %}
+  <nav class="navbar navbar-default navbar-static-top" role="navigation">
+    <div class="container">
+      <div class="navbar-header">
+        <a class="navbar-brand" href="/">首頁</a>
+      </div>
+      <div>
+        <ul class="nav navbar-nav">
+          <li><a href="/question/">查詢</a></li>
+        </ul>
+      </div>
+    </div><!-- /.container -->
+  </nav>
+  <div class="container">{% block content %}{% endblock content%}</div>
+  {% endblock body %}
+  {% block js %}{% endblock js %}
+  </body>
+</html>
