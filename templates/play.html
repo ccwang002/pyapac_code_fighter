@@ -3,7 +3,7 @@
 {% block css %}
 <link rel="stylesheet" href="/static/libs/CodeMirror/lib/codemirror.css">
 <link rel="stylesheet" href="/static/libs/CodeMirror/theme/mdn-like.css">
-<link rel="stylesheet" href="/static/addon/dialog/dialog.css">
+<link rel="stylesheet" href="/static/libs/CodeMirror/addon/dialog/dialog.css">
 
 <style>
 .CodeMirror {
@@ -21,13 +21,13 @@
 <script src="/static/libs/CodeMirror/lib/codemirror.js" type="text/javascript" charset="utf-8"></script>
 <script src="/static/libs/CodeMirror/addon/edit/matchbrackets.js" type="text/javascript" charset="utf-8"></script>
 <script src="/static/libs/CodeMirror/mode/python/python.js" type="text/javascript" charset="utf-8"></script>
-<script src="/static/mode/clike/clike.js" type="text/javascript" charset="utf-8"></script>
-<script src="/static/keymap/vim.js" type="text/javascript" charset="utf-8"></script>
-<script src="/static/addon/edit/matchbrackets.js" type="text/javascript" charset="utf-8"></script>
-<script src="/static/addon/comment/comment.js" type="text/javascript" charset="utf-8"></script>
-<script src="/static/addon/dialog/dialog.js" type="text/javascript" charset="utf-8"></script>
-<script src="/static/addon/search/searchcursor.js" type="text/javascipt" charset="utf-8"></script>
-<script src="/static/addon/search/search.js" type="text/javascript" charset="utf-8"></script>
+<script src="/static/libs/CodeMirror/mode/clike/clike.js" type="text/javascript" charset="utf-8"></script>
+<script src="/static/libs/CodeMirror/keymap/vim.js" type="text/javascript" charset="utf-8"></script>
+<script src="/static/libs/CodeMirror/addon/edit/matchbrackets.js" type="text/javascript" charset="utf-8"></script>
+<script src="/static/libs/CodeMirror/addon/comment/comment.js" type="text/javascript" charset="utf-8"></script>
+<script src="/static/libs/CodeMirror/addon/dialog/dialog.js" type="text/javascript" charset="utf-8"></script>
+<script src="/static/libs/CodeMirror/addon/search/searchcursor.js" type="text/javascipt" charset="utf-8"></script>
+<script src="/static/libs/CodeMirror/addon/search/search.js" type="text/javascript" charset="utf-8"></script>
 
 {% endblock %}
 {% block content %}
@@ -94,16 +94,18 @@ var editor = CodeMirror.fromTextArea(document.getElementById("code"), {
   keyMap: "vim",
   extraKeys: { Tab: betterTab }
 });
-      var commandDisplay = document.getElementById('command-display');
-      var keys = '';
-      CodeMirror.on(editor, 'vim-keypress', function(key) {
-        keys = keys + key;
-        commandDisplay.innerHTML = keys;
-      });
-      CodeMirror.on(editor, 'vim-command-done', function(e) {
-        keys = '';
-        commandDisplay.innerHTML = keys;
-      });
+
+/* vim mode */
+var commandDisplay = document.getElementById('command-display');
+var keys = '';
+CodeMirror.on(editor, 'vim-keypress', function(key) {
+  keys = keys + key;
+  commandDisplay.innerHTML = keys;
+});
+CodeMirror.on(editor, 'vim-command-done', function(e) {
+  keys = '';
+  commandDisplay.innerHTML = keys;
+});
 
 </script>
 {% endblock %}
