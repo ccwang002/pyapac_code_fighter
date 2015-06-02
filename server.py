@@ -5,7 +5,7 @@ from bottle import (
 
 from functools import partial
 import importlib
-import judger
+import judge
 from pathlib import Path
 import re
 import sqlite3
@@ -208,15 +208,6 @@ def insert_result(**argd):
     return True
 
 
-@app.route('/test-submit/<question_name>/', method='GET')
-def submit(question_name='foo'):
-    q_pth = 'questions/q_%s.py' % question_name
-    ans_text = ''
-    importlib.reload(judger)
-    tp, test_output = judger.run_judge(q_pth, ans_text)
-    return test_output
-
-
 @app.route('/play/', method='GET')
 @jinja2_template('play.html')
 def play():
@@ -239,8 +230,8 @@ def submit_play():
     answer_text = request.forms.get('code')
 
     q_pth = 'questions/q_%s.py' % q_name
-    importlib.reload(judger)
-    test_prog, test_output = judger.run_judge(q_pth, answer_text)
+    importlib.reload(judge)
+    test_prog, test_output = judge.run_judge(q_pth, answer_text)
 
     # insert result into db
     insert_result(

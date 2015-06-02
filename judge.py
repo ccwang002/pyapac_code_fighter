@@ -1,7 +1,6 @@
 from io import StringIO
 from nose.core import TextTestRunner, TestProgram
 from nose.config import Config
-import re
 
 class EmbedTestProgram(TestProgram):
 
@@ -22,7 +21,13 @@ class EmbedTestProgram(TestProgram):
         self.success = self.result.wasSuccessful()
 
 
-def run_judge(q_pth, ans_text, module_name='judger'):
+def run_judge(q_pth, ans_text, module_name='judge'):
+    """Judge the submiited answer by nose test
+
+    Inject code into **runtime environment** and delete injected answers.
+    It's super hacky becuase I guess the web server will somehow reuse
+    a pool of processes.
+    """
     buf = StringIO()
     nose_config = Config()
     nose_config.verbosity = 2
@@ -36,7 +41,6 @@ def run_judge(q_pth, ans_text, module_name='judger'):
         argv=[''], exit=False, config=nose_config,
     )
     all_test_functions = [f for f in globals().keys() if f.startswith('test_')]
-    # print(all_test_functions)
     for f in all_test_functions:
         del globals()[f]
 
