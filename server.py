@@ -2,11 +2,11 @@ from bottle import (
     Bottle, jinja2_view, run,
     abort, static_file, request,
 )
-
 from functools import partial
 import importlib
 import judge
 from pathlib import Path
+import random
 import re
 import sqlite3
 
@@ -39,45 +39,20 @@ def list_question():
     }
 
 
-def read_question(q_name):
-    q_pth = parse_question_folder()[q_name]
-    doc_string = []
-    answer_example = []
-    with q_pth.open() as f:
-        # read doc string
-        for line in f:
-            if line.strip() in ["'''", '"""']:
-                break
-            doc_string.append(line)
-
-        # read answer example
-        reading_ans = False
-        for line in f:
-            if line.startswith('def answer('):
-                reading_ans = True
-            if not reading_ans:
-                continue
-            answer_example.append(line)
-            if line.startswith('    return '):
-                break
-    doc_string[0] = doc_string[0][len("'''"):]
-    q_name, q_desc = doc_string[0][len('Question '):].split(': ', 1)
-    doc_string = doc_string[2:]
-    return q_name, q_desc, ''.join(doc_string), ''.join(answer_example)
-
-
 _db_name = 'codegame.db'
 _db_backup = 'codegame.prv.db'
-#create default table
+
+
+# default table schema
 _create_db_tables_sql = '''\
-CREATE TABLE GAME (
+CREATE TABLE game (
     id INTEGER PRIMARY KEY ASC AUTOINCREMENT,
     name TEXT,
     question TEXT,
     timestamp DATETIME DEFAULT NULL
 );
 
-CREATE TABLE RESULT (
+CREATE TABLE result (
     id INTEGER PRIMARY KEY ASC AUTOINCREMENT,
     name TEXT,
     submit TEXT,
@@ -85,9 +60,15 @@ CREATE TABLE RESULT (
     timestamp DATETIME DEFAULT NULL,
     judge TEXT,
     gameid INTEGER,
-    FOREIGN KEY(gameid) REFERENCES GAME(id)
+    FOREIGN KEY(gameid) REFERENCES game(id)
 );
 '''
+
+
+def connect_db():
+    conn = sqlite3.connect(_db_name)
+    conn.row_factory = sqlite3.Row
+    return conn
 
 
 @app.route('/admin/', method='POST')
@@ -97,61 +78,58 @@ def reload_db():
     try:
         Path(_db_name).rename(_db_backup)
         db_existed = True
-    except OSError as e:
+    except OSError:
         db_existed = False
     # recreate the database. If any move fails, move back the original databse.
     try:
         conn = sqlite3.connect(_db_name)
         conn.executescript(_create_db_tables_sql)
         conn.commit()
-    except Exception as e:
+    except Exception:
+        # roll back using old database
         conn.close()
         if db_existed:
             Path(_db_name).unlink()
             Path(_db_backup).rename(_db_name)
         return False
     else:
+        conn.close()
         if db_existed:
             Path(_db_backup).unlink()
         return True
 
 
-# @app.route('/teacher/', method='POST')
-# def teacher():
-#     redirect('/teacher/{}/'.format(request.forms.get('teacherName')))
-
-
-def connect_db():
-    conn = sqlite3.connect(_db_name)
-    conn.row_factory = sqlite3.Row
-    return conn
-
-
-def get_games():
+def get_games(limit=-1):
     games = []
     with connect_db() as conn:
-        records = conn.execute(
-            'SELECT * FROM GAME ORDER BY timestamp DESC'
-        ).fetchall()
-        try:
-            for record in records:
-                games.append(
-                    {'id': record['id'],
-                     'name': record['name'],
-                     'question': record['question'],
-                     's_time': record['timestamp']})
-
-        except:
-            pass
+        if limit < 0:
+            records = conn.execute(
+                'SELECT * FROM game ORDER BY timestamp DESC'
+            ).fetchall()
+        else:
+            records = []
+            records.append(conn.execute(
+                'SELECT * FROM game ORDER BY timestamp DESC LIMIT BY ?', limit
+            ).fetchall())
+    for record in records:
+        games.append({
+            'id': record['id'],
+            'name': record['name'],
+            'question': record['question'],
+            's_time': record['timestamp']
+        })
     return games
 
-_insert_game_sql = 'INSERT INTO GAME (name, question, timestamp) VALUES %s '
+_insert_game_sql = 'INSERT INTO game (name, question, timestamp) VALUES %s '
 
 
 def insert_games(games=[]):
     with connect_db() as conn:
         for game in games:
-            vals = ','.join(['("%s", "%s", date(\'now\') )' % (item['name'], item['question'] ) for item in games])
+            vals = ','.join([
+                '("%s", "%s", date("now") )' % (item['name'], item['question'])
+                for item in games]
+            )
         try:
             conn.execute(_insert_game_sql % vals)
             conn.commit()
@@ -159,48 +137,45 @@ def insert_games(games=[]):
             return False
     return True
 
-_get_result_sql = 'SELECT * FROM RESULT'
-_get_result_id_sql = ' WHERE RESULT.gameid = %s ORDER BY RESULT.name ASC'
+_get_result_sql = 'SELECT * FROM result'
+_get_result_id_sql = ' WHERE result.gameid = %s ORDER BY RESULT.name ASC'
 
 
 def get_results(gameid=''):
-    #list all game result
+    #  list all game result
     results = []
     with connect_db() as conn:
         if not gameid:
             records = conn.execute(_get_result_sql).fetchall()
         else:
-            records = conn.execute(_get_result_sql + _get_result_id_sql % gameid)
+            sql_cmd = _get_result_sql + _get_result_id_sql % gameid
+            records = conn.execute(sql_cmd)
         try:
-            for record in records:
-                results.append(
-                    {'id': record['id'],
-                     'name': record['name'],
-                     'submit': record['submit'],
-                     'codingtime': record['codingtime'],
-                     'timestamp': record['timestamp'],
-                     'judge': record['judge'],
-                     'gameid': record['gameid']})
+            # for record in records:
+            #     results.append({
+            #         'id': record['id'],
+            #         'name': record['name'],
+            #         'submit': record['submit'],
+            #         'codingtime': record['codingtime'],
+            #         'timestamp': record['timestamp'],
+            #         'judge': record['judge'],
+            #         'gameid': record['gameid']
+            #     })
+            records = [dict(rec) for rec in records]
         except Exception:
             pass
     return results
 
-_ins_result_sql = 'INSERT INTO RESULT (name, submit, codingtime, timestamp, judge, gameid) VALUES '
-
-
-#insert result each by each
-def insert_result(**argd):
+# insert result each by each
+def insert_result(name, submit, codingtime, judge, gameid):
+    sql_cmd = (
+        'INSERT INTO '
+        'result(name, submit, codingtime, timestamp, judge, gameid) '
+        "VALUES (?, ?, ?, date('now'), ?, ?)"
+    )
     with connect_db() as conn:
         try:
-            isql = _ins_result_sql + "(?, ?, ?, date('now'), ?, ?)"
-            conn.execute(
-                isql,
-                (argd['name'],
-                argd['submit'],
-                argd['codingtime'],
-                argd['judge'],
-                argd['gameid'])
-            )
+            conn.execute(sql_cmd, (name, submit, codingtime, judge, gameid))
             conn.commit()
         except Exception as e:
             print(e)
@@ -212,7 +187,8 @@ def insert_result(**argd):
 @jinja2_template('play.html')
 def play():
     game = get_games()[-1]
-    q_name, q_desc, q_doc, q_ex_ans = read_question(game['name'])
+    q_pth = parse_question_folder()[game['name']]
+    q_name, q_desc, q_doc, q_ex_ans = judge.read_question(q_pth)
     return {
         'q_name': q_name,
         'q_desc': q_desc,
@@ -225,11 +201,11 @@ def play():
 @jinja2_template('play.html')
 def submit_play():
     game = get_games()[-1]
-    q_name, q_desc, q_doc, q_ex_ans = read_question(game['name'])
+    q_pth = parse_question_folder()[game['name']]
+    q_name, q_desc, q_doc, q_ex_ans = judge.read_question(q_pth)
     player_name = request.forms.get('player_name')
     answer_text = request.forms.get('code')
 
-    q_pth = 'questions/q_%s.py' % q_name
     importlib.reload(judge)
     test_prog, test_output = judge.run_judge(q_pth, answer_text)
 
@@ -256,66 +232,43 @@ def submit_play():
 
 @app.route('/judge/', method='GET')
 @jinja2_template('judge.html')
-def judge():
+def judge_status():
     return {'msg': 'judge'}
 
 
 @app.route('/gameadmin/', method='GET')
 @jinja2_template('admin.html')
 def admin(msg='welcome'):
-    r_form = '''\
-            <form action="/gameadmin/" method="post" id="adminform">
-            CreateGame: <input name="gamename" type="text" />
-            <input name="operation" id="operation" value="" type="hidden" />
-            <input name="create" value="Create" type="button" onClick="Create()"/>
-            <input name="random" value="Random" type="button" onClick="Random()"/>
-            </form>
-    '''
-    r_js_form = '''
-    function Create(e) {
-        document.getElementById("operation").value = "Create";
-        console.log(document.getElementById("operation").value);
-        document.getElementById("adminform").submit();
-        return false;
+    return {
+        'msg': msg,
     }
-    function Random(e) {
-        document.getElementById("operation").value = "Random";
-        console.log(document.getElementById("operation").value);
-        document.getElementById("adminform").submit();
-        return false;
-    }
-    '''
-    return {'msg':msg,
-            'form': r_form,
-            'js':r_js_form}
 
-
-import random
 
 @app.route('/gameadmin/', method='POST')
 @jinja2_template('admin.html')
 def doAdmin():
-    operation = request.forms.get('operation','Random').lower()
-    print('%s' % request.forms.get('operation',''))
+    operation = request.forms.get('operation', 'Random').lower()
+    print('%s' % request.forms.get('operation', ''))
     msg = []
     print(list_question())
     if operation == 'create':
-        #create new game
-        qname = request.forms.get('gamename','')
+        # create new game
+        qname = request.forms.get('gamename', '')
         if qname and qname in parse_question_folder().keys():
-            if not insert_games( [ {'name':qname, 'question':'empty'},]):
+            if not insert_games([{'name': qname, 'question': 'empty'}]):
                 msg.append('Error: Cannot Create Game! %s' % qname)
             else:
                 msg.append('SUCCESS Create Game! %s' % qname)
     else:
-        #random generate game
+        # random generate game
         keys = list(parse_question_folder().keys())
-        qname = random.choice(  keys )
-        if not insert_games( [ {'name':qname, 'question':'empty'},]):
+        qname = random.choice(keys)
+        if not insert_games([{'name': qname, 'question': 'empty'}]):
             msg.append('Error: Cannot Create Game! %s' % qname)
         else:
             msg.append('SUCCESS Create Game! %s' % qname)
     return admin(msg=';'.join(msg))
+
 
 @app.route('/test/', method='GET')
 @jinja2_template('admin.html')
@@ -327,7 +280,11 @@ def testdb():
     games = get_games()
     if not games:
         msg.append('there is no game in db')
-    if not insert_result(name='test_foo', submit='test_bar', codingtime='57', judge='Pass', gameid='0'):
+    ret_val = insert_result(
+        name='test_foo', submit='test_bar',
+        codingtime='57', judge='Pass', gameid='0'
+    )
+    if not ret_val:
         msg.append('Add result failed')
     record = get_results()
     if not record:

@@ -48,7 +48,7 @@ def run_judge(q_pth, ans_text, module_name='judge'):
 
 
 def read_question_case(q_pth):
-    with open(q_pth) as f:
+    with q_pth.open() as f:
         full_code_text = f.read()
     code_obj = compile(full_code_text, '<string>', 'exec')
     return code_obj
@@ -56,3 +56,30 @@ def read_question_case(q_pth):
 def read_user_answer(ans_text):
     code_obj = compile(ans_text, '<string>', 'exec')
     return code_obj
+
+
+def read_question(q_pth):
+    doc_string = []
+    answer_example = []
+    with q_pth.open() as f:
+        # read doc string
+        for line in f:
+            if line.strip() in ["'''", '"""']:
+                break
+            doc_string.append(line)
+
+        # read answer example
+        reading_ans = False
+        for line in f:
+            if line.startswith('def answer('):
+                reading_ans = True
+            if not reading_ans:
+                continue
+            answer_example.append(line)
+            if line.startswith('    return '):
+                break
+    doc_string[0] = doc_string[0][len("'''"):]
+    q_name, q_desc = doc_string[0][len('Question '):].split(': ', 1)
+    doc_string = doc_string[2:]
+    return q_name, q_desc, ''.join(doc_string), ''.join(answer_example)
+

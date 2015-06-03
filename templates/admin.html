@@ -16,9 +16,12 @@
       <div class="panel-heading">Code Fighter</div>
       <div class="panel-body">
         <p>Welcome to Code Fighter Admin!</p>
-        {% if form %}
-            {{ form }}
-        {% endif %}
+        <form action="/gameadmin/" method="post" id="adminform">
+          CreateGame: <input name="gamename" type="text" />
+          <input name="operation" id="operation" value="" type="hidden" />
+          <input name="create" value="Create" onclick="new_game()" type="button" onClick="Create()"/>
+          <input name="random" value="Random" onclick="rand_new_game()" type="button" onClick="Random()"/>
+        </form>
       </div>
     </div>
   </div><!-- /.col -->
@@ -27,8 +30,17 @@
 
 {% block js %}
 <script>
-        {% if js %}
-            {{ js }}
-        {% endif %}
+function new_game() {
+  document.getElementById("operation").value = "Create";
+  // console.log(document.getElementById("operation").value);
+  document.getElementById("adminform").submit();
+  return false;
+}
+function rand_new_game() {
+  document.getElementById("operation").value = "Random";
+  // console.log(document.getElementById("operation").value);
+  document.getElementById("adminform").submit();
+  return false;
+}
 </script>
 {% endblock js %}
