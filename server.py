@@ -1,10 +1,11 @@
 from bottle import (
     Bottle, jinja2_view, run,
-    abort, static_file, request,
+    static_file, request,
 )
 from functools import partial
 import importlib
 import judge
+import operator
 from pathlib import Path
 import random
 import re
@@ -14,34 +15,8 @@ app = Bottle()
 jinja2_template = partial(jinja2_view, template_lookup=['templates'])
 
 
-def parse_question_folder():
-    """Parse all questions under questions/ and return file mapping."""
-    q_pths = Path('questions').glob('q_*.py')
-    extract_q_name = re.compile('^q_(.+)$').match
-    return {
-        extract_q_name(pth.stem).group(1): pth
-        for pth in q_pths
-    }
-
-
-@app.route('/', method='GET')
-@jinja2_template('index.html')
-def index(msg=''):
-    return {'msg': msg}
-
-
-@app.route('/question/', method='GET')
-@jinja2_template('questions.html')
-def list_question():
-    all_questions = parse_question_folder()
-    return {
-        'questions': all_questions.keys()
-    }
-
-
 _db_name = 'codegame.db'
 _db_backup = 'codegame.prv.db'
-
 
 # default table schema
 _create_db_tables_sql = '''\
@@ -100,17 +75,15 @@ def reload_db():
 
 
 def get_games(limit=-1):
+    sql_latest_games = 'SELECT * FROM game ORDER BY timestamp DESC'
     games = []
     with connect_db() as conn:
         if limit < 0:
-            records = conn.execute(
-                'SELECT * FROM game ORDER BY timestamp DESC'
-            ).fetchall()
+            records = conn.execute(sql_latest_games).fetchall()
         else:
-            records = []
-            records.append(conn.execute(
-                'SELECT * FROM game ORDER BY timestamp DESC LIMIT BY ?', limit
-            ).fetchall())
+            records = conn.execute(
+                sql_latest_games + ' LIMIT ?', str(limit)
+            ).fetchall()
     for record in records:
         games.append({
             'id': record['id'],
@@ -120,25 +93,24 @@ def get_games(limit=-1):
         })
     return games
 
-_insert_game_sql = 'INSERT INTO game (name, question, timestamp) VALUES %s '
 
-
-def insert_games(games=[]):
-    with connect_db() as conn:
-        for game in games:
-            vals = ','.join([
-                '("%s", "%s", date("now") )' % (item['name'], item['question'])
-                for item in games]
-            )
-        try:
-            conn.execute(_insert_game_sql % vals)
-            conn.commit()
-        except:
-            return False
-    return True
+def insert_games(games):
+    try:
+        conn = connect_db()
+        conn.executemany(
+            'INSERT INTO game(name, question, timestamp) '
+            'VALUES (?, ?, datetime("now"))',
+            map(operator.itemgetter('name', 'question'), games)
+        )
+        conn.commit()
+    except Exception as e:
+        print(e)
+        return False
+    else:
+        return True
 
 _get_result_sql = 'SELECT * FROM result'
-_get_result_id_sql = ' WHERE result.gameid = %s ORDER BY RESULT.name ASC'
+_get_result_id_sql = ' WHERE result.gameid = %s ORDER BY result.name ASC'
 
 
 def get_results(gameid=''):
@@ -149,7 +121,7 @@ def get_results(gameid=''):
             records = conn.execute(_get_result_sql).fetchall()
         else:
             sql_cmd = _get_result_sql + _get_result_id_sql % gameid
-            records = conn.execute(sql_cmd)
+            records = conn.execute(sql_cmd).fetchall()
         try:
             # for record in records:
             #     results.append({
@@ -161,9 +133,9 @@ def get_results(gameid=''):
             #         'judge': record['judge'],
             #         'gameid': record['gameid']
             #     })
-            records = [dict(rec) for rec in records]
-        except Exception:
-            pass
+            results = [dict(rec) for rec in records]
+        except Exception as e:
+            print(e)
     return results
 
 # insert result each by each
@@ -171,7 +143,7 @@ def insert_result(name, submit, codingtime, judge, gameid):
     sql_cmd = (
         'INSERT INTO '
         'result(name, submit, codingtime, timestamp, judge, gameid) '
-        "VALUES (?, ?, ?, date('now'), ?, ?)"
+        "VALUES (?, ?, ?, datetime('now'), ?, ?)"
     )
     with connect_db() as conn:
         try:
@@ -183,10 +155,35 @@ def insert_result(name, submit, codingtime, judge, gameid):
     return True
 
 
+@app.route('/', method='GET')
+@jinja2_template('index.html')
+def index(msg=''):
+    return {'msg': msg}
+
+
+@app.route('/question/', method='GET')
+@jinja2_template('questions.html')
+def list_question():
+    all_questions = parse_question_folder()
+    return {
+        'questions': all_questions.keys()
+    }
+
+
+def parse_question_folder():
+    """Parse all questions under questions/ and return file mapping."""
+    q_pths = Path('questions').glob('q_*.py')
+    extract_q_name = re.compile('^q_(.+)$').match
+    return {
+        extract_q_name(pth.stem).group(1): pth
+        for pth in q_pths
+    }
+
+
 @app.route('/play/', method='GET')
 @jinja2_template('play.html')
 def play():
-    game = get_games()[-1]
+    game = get_games(limit=1)[-1]
     q_pth = parse_question_folder()[game['name']]
     q_name, q_desc, q_doc, q_ex_ans = judge.read_question(q_pth)
     return {
@@ -200,7 +197,7 @@ def play():
 @app.route('/play/', method='POST')
 @jinja2_template('play.html')
 def submit_play():
-    game = get_games()[-1]
+    game = get_games(limit=1)[-1]
     q_pth = parse_question_folder()[game['name']]
     q_name, q_desc, q_doc, q_ex_ans = judge.read_question(q_pth)
     player_name = request.forms.get('player_name')
@@ -250,7 +247,6 @@ def doAdmin():
     operation = request.forms.get('operation', 'Random').lower()
     print('%s' % request.forms.get('operation', ''))
     msg = []
-    print(list_question())
     if operation == 'create':
         # create new game
         qname = request.forms.get('gamename', '')
@@ -291,7 +287,7 @@ def testdb():
         msg.append('Get result failed')
     if not msg:
         msg.append('All Test Success!')
-    return {'msg': ';'.join(msg)}
+    return {'msg': '; '.join(msg)}
 
 
 @app.route('/static/<path:path>')
