@@ -46,34 +46,6 @@ def connect_db():
     return conn
 
 
-@app.route('/admin/', method='POST')
-def reload_db():
-    # if database does not exist, create a new one without renaming.
-    # otherwise move the original databse as xxx.prev
-    try:
-        Path(_db_name).rename(_db_backup)
-        db_existed = True
-    except OSError:
-        db_existed = False
-    # recreate the database. If any move fails, move back the original databse.
-    try:
-        conn = sqlite3.connect(_db_name)
-        conn.executescript(_create_db_tables_sql)
-        conn.commit()
-    except Exception:
-        # roll back using old database
-        conn.close()
-        if db_existed:
-            Path(_db_name).unlink()
-            Path(_db_backup).rename(_db_name)
-        return False
-    else:
-        conn.close()
-        if db_existed:
-            Path(_db_backup).unlink()
-        return True
-
-
 def get_games(limit=-1):
     sql_latest_games = 'SELECT * FROM game ORDER BY timestamp DESC'
     games = []
@@ -168,6 +140,34 @@ def list_question():
     return {
         'questions': all_questions.keys()
     }
+
+
+@app.route('/admin/', method='POST')
+def reload_db():
+    # if database does not exist, create a new one without renaming.
+    # otherwise move the original databse as xxx.prev
+    try:
+        Path(_db_name).rename(_db_backup)
+        db_existed = True
+    except OSError:
+        db_existed = False
+    # recreate the database. If any move fails, move back the original databse.
+    try:
+        conn = sqlite3.connect(_db_name)
+        conn.executescript(_create_db_tables_sql)
+        conn.commit()
+    except Exception:
+        # roll back using old database
+        conn.close()
+        if db_existed:
+            Path(_db_name).unlink()
+            Path(_db_backup).rename(_db_name)
+        return False
+    else:
+        conn.close()
+        if db_existed:
+            Path(_db_backup).unlink()
+        return True
 
 
 def parse_question_folder():
