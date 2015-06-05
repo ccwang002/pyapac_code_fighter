@@ -33,15 +33,15 @@ Examples
 '''
 
 def answer(mapping):
-	num_of_classes = max(mapping.values())
-	names_lists = [[]] * num_of_classes
-	for name, class_no in mapping.items():
-		names_lists[class_no].append(name)
-	return names_lists
+    num_of_classes = max(mapping.values())
+    names_lists = [[]] * num_of_classes
+    for name, class_no in mapping.items():
+        names_lists[class_no].append(name)
+    return names_lists
 
 def test_four_classes():
-	assert answer({"Tom":1, "Dboy":1, "c3h3":2, "Liang2":3, "Yen":4, "Wush":2, "Ning":4}) == [["Tom", "Daniel"], ["c3h3", "Wush"], ["Liang2"], ["Yen"]]
+    assert answer({"Tom":1, "Dboy":1, "c3h3":2, "Liang2":3, "Yen":4, "Wush":2, "Ning":4}) == [["Tom", "Daniel"], ["c3h3", "Wush"], ["Liang2"], ["Yen"]]
 
 def test_empty_classes():
-	assert answer({"c3h3":1, "Wush":4}) == [["c3h3"], [], [], ["Wush"]]
+    assert answer({"c3h3":1, "Wush":4}) == [["c3h3"], [], [], ["Wush"]]
 
