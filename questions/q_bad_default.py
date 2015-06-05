@@ -1,4 +1,4 @@
-'''Question bad_default: What's wrong?
+'''Question bad_default: What's wrong? (Debug)
 
 Description
 -----------
@@ -22,6 +22,7 @@ Examples
     ['a', 'b', 'c']
 
 '''
+
 def answer(values, result_list = []):
 	for val in values:
 		result_list.append(val)
