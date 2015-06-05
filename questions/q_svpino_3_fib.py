@@ -32,6 +32,8 @@ Examples
     True
 
 '''
+from nose.tools import timed as _timed
+
 
 def answer(n):
     """Implement the fibonacci function."""
@@ -42,7 +44,7 @@ def test_init_fib():
     first_ten = [0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55]
     ans = list(map(answer, range(11)))
     assert len(ans) == len(first_ten)
-    assert [a == ref for a, ref in zip(ans, first_ten)]
+    assert all(a == ref for a, ref in zip(ans, first_ten))
 
 
 def test_higher_fib():
@@ -52,9 +54,10 @@ def test_higher_fib():
     ]
     ans = list(map(answer, range(11, 21)))
     assert len(ans) == len(next_ten)
-    assert [a == ref for a, ref in zip(ans, next_ten)]
+    assert all(a == ref for a, ref in zip(ans, next_ten))
 
 
+@_timed(.5)
 def test_super_large_fib():
     fib_95 = 31940434634990099905
     assert answer(95) == fib_95
