@@ -230,7 +230,11 @@ def submit_play():
 @app.route('/judge/', method='GET')
 @jinja2_template('judge.html')
 def judge_status():
-    return {'msg': 'judge'}
+    latest_game = get_games(limit=1)[0]
+    results = get_results(latest_game['id'])
+    return {
+        'results': results
+    }
 
 
 @app.route('/gameadmin/', method='GET')
