@@ -41,6 +41,7 @@ def test_example_9527():
     assert answer([9, 5, 27]) == 9527
     assert answer([9, 5, 2, 7]) == 9752
 
+
 def test_zeros():
     assert answer([5, 2, 0, 1, 314, 5, 56, 6]) == 65655314210
     assert answer([689, 40, 5, 84, 60, 9]) == 98468960540
