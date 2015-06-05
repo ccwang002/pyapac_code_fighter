@@ -40,7 +40,13 @@ def answer(mapping):
     return names_lists
 
 def test_four_classes():
-    assert answer({"Tom":1, "Dboy":1, "c3h3":2, "Liang2":3, "Yen":4, "Wush":2, "Ning":4}) == [["Tom", "Daniel"], ["c3h3", "Wush"], ["Liang2"], ["Yen"]]
+    assert "Tom" in answer({"Tom":1, "Dboy":1, "c3h3":2, "Liang2":3, "Yen":4, "Wush":2, "Ning":4})[0]
+    assert "Dboy" in answer({"Tom":1, "Dboy":1, "c3h3":2, "Liang2":3, "Yen":4, "Wush":2, "Ning":4})[0]
+    assert "c3h3" in answer({"Tom":1, "Dboy":1, "c3h3":2, "Liang2":3, "Yen":4, "Wush":2, "Ning":4})[1]
+    assert "Wush" in answer({"Tom":1, "Dboy":1, "c3h3":2, "Liang2":3, "Yen":4, "Wush":2, "Ning":4})[1]
+    assert "Liang2" in answer({"Tom":1, "Dboy":1, "c3h3":2, "Liang2":3, "Yen":4, "Wush":2, "Ning":4})[2]
+    assert "Yen" in answer({"Tom":1, "Dboy":1, "c3h3":2, "Liang2":3, "Yen":4, "Wush":2, "Ning":4})[3]
+    assert "Ning" in answer({"Tom":1, "Dboy":1, "c3h3":2, "Liang2":3, "Yen":4, "Wush":2, "Ning":4})[3]
 
 def test_empty_classes():
     assert answer({"c3h3":1, "Wush":4}) == [["c3h3"], [], [], ["Wush"]]
