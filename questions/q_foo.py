@@ -14,7 +14,7 @@ answer('foobar', 'foobaz')   # True
 '''
 
 def answer(*foos):
-    """Tell if all dates have same day."""
+    """Tell if arugments start with 'foo'."""
     return True  # or False
 
 def test_answer_foo():
