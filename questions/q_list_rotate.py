@@ -1,10 +1,10 @@
-'''Question list::Rotate (copyright -> CodingBat)
+'''Question list_rotate: (copyright -> CodingBat)
 
 Description
 -----------
 
-
-Given an array of arbitray size, return an array with the elements "rotated left". 
+Given an array of arbitray size, return an array with the elements "rotated
+left".
 
 
 Examples
@@ -16,9 +16,7 @@ Examples
 '''
 
 def answer(list_in):
-
     return []
-
 
 
 def test_answer_ex1():
