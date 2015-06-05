@@ -11,11 +11,14 @@
 </div><!-- /.row -->
 {% endif %}
 <div class="row">
+  {% for name, all_submissions in  results.items() %}
   <ul>
-    {% for result in results %}
+    {% for result in all_submissions %}
     <li>{{ result.name }} | {{ result.judge }} | {{ result.timestamp }} </li>
     <pre>{{ result.submit }}</pre>
     {% endfor %}
   </ul>
+  <hr>
+  {% endfor %}
 </div><!-- /.row -->
 {% endblock content %}

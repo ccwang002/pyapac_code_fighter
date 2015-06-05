@@ -2,8 +2,11 @@ from bottle import (
     Bottle, jinja2_view, run,
     static_file, request,
 )
+from collections import OrderedDict
+from datetime import datetime
 from functools import partial
 import importlib
+from itertools import groupby
 import judge
 import operator
 from pathlib import Path
@@ -71,7 +74,7 @@ def insert_games(games):
         conn = connect_db()
         conn.executemany(
             'INSERT INTO game(name, question, timestamp) '
-            'VALUES (?, ?, datetime("now"))',
+            'VALUES (?, ?, datetime("now", "localtime"))',
             map(operator.itemgetter('name', 'question'), games)
         )
         conn.commit()
@@ -81,11 +84,10 @@ def insert_games(games):
     else:
         return True
 
-_get_result_sql = 'SELECT * FROM result'
-_get_result_id_sql = ' WHERE result.gameid = %s ORDER BY result.name ASC'
-
 
 def get_results(gameid=''):
+    _get_result_sql = 'SELECT * FROM result'
+    _get_result_id_sql = ' WHERE result.gameid = %s ORDER BY result.name ASC'
     #  list all game result
     results = []
     with connect_db() as conn:
@@ -115,7 +117,7 @@ def insert_result(name, submit, codingtime, judge, gameid):
     sql_cmd = (
         'INSERT INTO '
         'result(name, submit, codingtime, timestamp, judge, gameid) '
-        "VALUES (?, ?, ?, datetime('now'), ?, ?)"
+        "VALUES (?, ?, ?, datetime('now', 'localtime'), ?, ?)"
     )
     with connect_db() as conn:
         try:
@@ -232,8 +234,20 @@ def submit_play():
 def judge_status():
     latest_game = get_games(limit=1)[0]
     results = get_results(latest_game['id'])
+
+    submit_by_names = OrderedDict([
+        (k, list(v)) for k, v in groupby(results, lambda r: r['name'])
+    ])
+    for name in submit_by_names.keys():
+        submit_by_names[name] = sorted(
+            submit_by_names[name],
+            key=lambda r: datetime.strptime(
+                r['timestamp'], "%Y-%m-%d %H:%M:%S"
+            ))
+
+    print(submit_by_names)
     return {
-        'results': results
+        'results': submit_by_names
     }
 
 
