@@ -13,13 +13,17 @@
 <div class="row">
   <div class="col-sm-10 col-sm-offset-1">
     <div class="panel panel-info">
-      <div class="panel-heading">Code Fighter</div>
+      <div class="panel-heading">Welcome to Code Fighter Admin!</div>
       <div class="panel-body">
-        <p>Welcome to Code Fighter Admin!</p>
-        <form action="/gameadmin/" method="post" id="adminform">
-          CreateGame: <input name="gamename" type="text" />
+        <form class="form-inline" action="/gameadmin/" method="post" id="adminform">
+          Create a new game: <!--<input name="gamename" type="text" /> -->
+          <select class="form-control" name="gamename">
+            {% for q in questions %}
+            <option>{{ q }}</option>
+            {% endfor %}
+          </select>
           <input name="operation" id="operation" value="" type="hidden" />
-          <input name="create" value="Create" onclick="new_game()" type="button" onClick="Create()"/>
+          <input name="create" value="Create by name" onclick="new_game()" type="button" onClick="Create()"/>
           <input name="random" value="Random" onclick="rand_new_game()" type="button" onClick="Random()"/>
         </form>
       </div>

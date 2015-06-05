@@ -252,9 +252,11 @@ def judge_status():
 
 @app.route('/gameadmin/', method='GET')
 @jinja2_template('admin.html')
-def admin(msg='welcome'):
+def admin(msg=None):
+    all_questions = parse_question_folder()
     return {
         'msg': msg,
+        'questions': all_questions.keys(),
     }
 
 
@@ -269,17 +271,19 @@ def doAdmin():
         qname = request.forms.get('gamename', '')
         if qname and qname in parse_question_folder().keys():
             if not insert_games([{'name': qname, 'question': 'empty'}]):
-                msg.append('Error: Cannot Create Game! %s' % qname)
+                msg.append(
+                    'Error: Cannot create game: <code>%s</code>' %
+                    qname)
             else:
-                msg.append('SUCCESS Create Game! %s' % qname)
+                msg.append('Success: Create game: <code>%s</code>' % qname)
     else:
         # random generate game
         keys = list(parse_question_folder().keys())
         qname = random.choice(keys)
         if not insert_games([{'name': qname, 'question': 'empty'}]):
-            msg.append('Error: Cannot Create Game! %s' % qname)
+            msg.append('Error: Cannot create game <code>%s</code>' % qname)
         else:
-            msg.append('SUCCESS Create Game! %s' % qname)
+            msg.append('Success: Create game <code>%s</code>' % qname)
     return admin(msg=';'.join(msg))
 
 
