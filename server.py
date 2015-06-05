@@ -232,20 +232,19 @@ def submit_play():
 @app.route('/judge/', method='GET')
 @jinja2_template('judge.html')
 def judge_status():
+    def parse_time_stamp(r):
+        return datetime.strptime(
+            r['timestamp'], "%Y-%m-%d %H:%M:%S"
+        )
+
     latest_game = get_games(limit=1)[0]
     results = get_results(latest_game['id'])
 
     submit_by_names = OrderedDict([
-        (k, list(v)) for k, v in groupby(results, lambda r: r['name'])
+        (k, sorted(v, key=parse_time_stamp))
+        for k, v in groupby(results, lambda r: r['name'])
     ])
-    for name in submit_by_names.keys():
-        submit_by_names[name] = sorted(
-            submit_by_names[name],
-            key=lambda r: datetime.strptime(
-                r['timestamp'], "%Y-%m-%d %H:%M:%S"
-            ))
 
-    print(submit_by_names)
     return {
         'results': submit_by_names
     }
