@@ -51,7 +51,7 @@ def test_answer_tuple():
 def test_answer_string():
     answer([1])
     try:
-        result = answer(['Pycon'])
+        result = answer('PyCon')
         assert result == ['P', 'y', 'C', 'o', 'n']
     except:
         print("Expecting: ['P', 'y', 'C', 'o', 'n']")
