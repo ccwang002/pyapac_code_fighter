@@ -22,13 +22,13 @@ def answer(year, month, day):
     return True
 
 def test_jun_50():
-    assert not answer(2015, 6, 50)
+    assert not answer(6, 50)
 
 def test_feb_28():
-    assert answer(2015, 2, 28)
+    assert answer(2, 28)
 
 def test_feb_30():
-    assert not answer(2015, 2, 30)
+    assert not answer(2, 30)
 
 def test_all_months_zero_or_neg():
     for mm in range(1, 13):
