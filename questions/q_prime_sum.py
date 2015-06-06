@@ -17,8 +17,8 @@ Examples
 
 '''
 
-def answer(n, m):
-    return []
+def answer(n):
+    return 0
 
 def _xprime(n):
     table = [0] * n
