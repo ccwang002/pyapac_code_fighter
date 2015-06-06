@@ -28,8 +28,9 @@
       <thead>
         <tr>
           <th>Users</th>
-          <th>Question Solved</th>
+          <th>Solved</th>
           <th>Solved Time</th>
+          <th>Latest Details</th>
         </tr>
       </thead>
       <tbody>
@@ -38,6 +39,7 @@
           <th>{{ name }}</th>
           <td>{% if last_success_time is none %}<span class="glyphicon glyphicon-remove"></span>{% else %}<span class="glyphicon glyphicon-ok"></span>{% endif %}</td>
           <td>{% if last_success_time is none %}-{% else %}<b>{{ last_success_time|round(2) }}</b> seconds ago{% endif %}</td>
+          <td>{% if last_success_time is none %}{{ results.get(name).0.judge_detail }}{% endif %}</td>
         </tr>
         {% endfor %}
       </tbody>
@@ -53,7 +55,7 @@
     <div class="panel {% if result.judge == 'True' %}panel-success{% else %}panel-danger{% endif %}">
       <div class="panel-heading">
         <h3 class="panel-title">
-          {% if result.judge == 'True' %}PASS{% else %}FAIL{% endif %}
+          {% if result.judge == 'True' %}PASS{% else %}FAIL {{ result.judge_detail }}{% endif %}
           <span class="pull-right">{{ result.timestamp|round(2) }} seconds ago</span>
         </h3>
       </div>
