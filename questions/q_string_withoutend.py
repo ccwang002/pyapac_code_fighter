@@ -17,9 +17,7 @@ answer('coding') → 'odin'
 '''
 
 def answer(str_in):
-
     return ''
-
 
 
 def test_answer_ex1():

@@ -243,7 +243,7 @@ def judge_status():
     results = get_results(latest_game['id'])
     now = datetime.utcnow()
     submit_by_names = OrderedDict([
-        (k, sorted(v, key=parse_time_stamp, reverse=True))
+        (k, sorted(v, key=parse_time_stamp))
         for k, v in groupby(results, lambda r: r['name'])
     ])
 

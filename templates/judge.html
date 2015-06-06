@@ -17,15 +17,35 @@
 
 <div class="row">
   <div class="col-sm-12">
-    <h1>Question {{ q_name }} <small>{{ q_desc }}</small></h1>
+    <h3>Question {{ q_name }} <small>{{ q_desc }}</small></h3>
     <pre>{{ q_doc }}</pre>
+  </div>
+</div>
+<div class="row">
+  <div class="col-sm-8 col-sm-offset-2">
+    <h3>Scoreboard</h3>
+    <table class="table table-bordered">
+      <thead>
+        <tr>
+          <th>Users</th>
+          <th>Question Solved</th>
+          <th>Solved Time</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for name, last_success_time in latest_success.items() %}
+        <tr class="{% if last_success_time is not none %}success{% endif %}">
+          <th>{{ name }}</th>
+          <td>{% if last_success_time is none %}<span class="glyphicon glyphicon-remove"></span>{% else %}<span class="glyphicon glyphicon-ok"></span>{% endif %}</td>
+          <td>{% if last_success_time is none %}-{% else %}<b>{{ last_success_time|round(2) }}</b> seconds ago{% endif %}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
   </div>
 </div>
 
 <div class="row">
-  <div class="col-sm-12">
-    <h1>Submission History</h1>
-  </div>
   {% for name, all_submissions in  results.items() %}
   <div class="col-sm-6">
     <h2>{{ name }}</h2>
