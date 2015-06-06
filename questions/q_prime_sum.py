@@ -1,4 +1,4 @@
-'''Question list_rotate: (copyright -> CodingBat)
+'''Question prime_sum: (copyright -> CodingBat)
 
 Description
 -----------
