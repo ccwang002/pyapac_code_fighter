@@ -1,6 +1,6 @@
 from bottle import (
     Bottle, jinja2_view, run,
-    static_file, request,
+    static_file, request, default_app
 )
 from collections import OrderedDict
 from datetime import datetime
@@ -328,3 +328,5 @@ def get_static_file(path):
 
 if __name__ == '__main__':
     run(app, host='localhost', port=8080, debug=True, reloader=True)
+else:
+    application = default_app()
