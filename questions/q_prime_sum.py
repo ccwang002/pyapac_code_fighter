@@ -33,7 +33,7 @@ def _xprime(n):
         
 def test_answer_ex1():
     n_in = 2000000
-    assert 37550402023 is answer(n_in)
+    assert 142913828922 is answer(n_in)
 
 
 def test_answer_ex2():
