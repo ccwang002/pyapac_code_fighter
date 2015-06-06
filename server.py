@@ -245,8 +245,18 @@ def judge_status():
         for k, v in groupby(results, lambda r: r['name'])
     ])
 
+    # find latest submit time
+    latest_success_submit = OrderedDict.fromkeys(submit_by_names.keys())
+    for name, submit_history_time_asc in submit_by_names.items():
+        last_success_time = None
+        for submit in submit_history_time_asc:
+            if submit['judge'] == 'True':
+                last_success_time = parse_time_stamp(submit)
+        latest_success_submit[name] = last_success_time
+
     return {
-        'results': submit_by_names
+        'results': submit_by_names,
+        'latest_success': latest_success_submit
     }
 
 
