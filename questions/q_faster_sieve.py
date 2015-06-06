@@ -17,6 +17,9 @@ Examples
 
 '''
 
+from nose.tools import timed
+
+
 def answer():
 
     def sieve(n):
@@ -41,6 +44,7 @@ def answer():
     return sieve, prime
 
 
+@timed(10)
 def test_speed_challenge():
     nth_prime = lambda n: primes(n-1, sieve(10))
     assert nth_prime(1) == 2
