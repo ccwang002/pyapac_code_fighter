@@ -10,9 +10,9 @@ yields "ell". The string length will be at least 2.
 Examples
 --------
 
-answer('Hello') → 'ell'
-answer('java') → 'av'
-answer('coding') → 'odin'
+answer('Hello') -> 'ell'
+answer('java') -> 'av'
+answer('coding') -> 'odin'
 
 '''
 
