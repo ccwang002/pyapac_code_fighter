@@ -256,7 +256,14 @@ def judge_status():
                 last_success_time = submit['timestamp']
         latest_success_submit[name] = last_success_time
 
+    # game info
+    q_pth = parse_question_folder()[latest_game['name']]
+    q_name, q_desc, q_doc, q_ex_ans = judge.read_question(q_pth)
+
     return {
+        'q_name': q_name,
+        'q_desc': q_desc,
+        'q_doc': '\n'.join(q_doc.splitlines()[3:13] + ['... (stripped)']),
         'results': submit_by_names,
         'latest_success': latest_success_submit
     }
