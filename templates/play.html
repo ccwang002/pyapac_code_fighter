@@ -30,7 +30,8 @@
 {% if result %}
 <div class="row">
   <div class="col-sm-10 col-sm-offset-1">
-    <h2>Lastest Submit Result</h2>
+    <h3 class="{% if passed %}text-success{% else %}text-danger{% endif %}">Lastest Submit Result {% if passed %}<span class="glyphicon glyphicon-ok icon-success"></span>{% else %}<span class="glyphicon glyphicon-remove icon-danger"></span>{% endif %} </h3>
+    <p>Error: {{ judge_detail.0 }} | Failed: {{ judge_detail.1 }} | Total: {{ judge_detail.2 }}</p>
     <pre><code>{{ result }}</code></pre>
   </div>
 </div>

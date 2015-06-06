@@ -37,6 +37,7 @@ CREATE TABLE result (
     codingtime TEXT,
     timestamp DATETIME DEFAULT NULL,
     judge TEXT,
+    judge_detail TEXT,
     gameid INTEGER,
     FOREIGN KEY(gameid) REFERENCES game(id)
 );
@@ -113,15 +114,18 @@ def get_results(gameid=''):
     return results
 
 # insert result each by each
-def insert_result(name, submit, codingtime, judge, gameid):
+def insert_result(name, submit, codingtime, judge, judge_detail, gameid):
     sql_cmd = (
-        'INSERT INTO '
-        'result(name, submit, codingtime, timestamp, judge, gameid) '
-        "VALUES (?, ?, ?, datetime('now'), ?, ?)"
+        'INSERT INTO result'
+        '(name, submit, codingtime, timestamp, judge, judge_detail, gameid) '
+        "VALUES (?, ?, ?, datetime('now'), ?, ?, ?)"
     )
     with connect_db() as conn:
         try:
-            conn.execute(sql_cmd, (name, submit, codingtime, judge, gameid))
+            conn.execute(
+                sql_cmd,
+                (name, submit, codingtime, judge, judge_detail, gameid)
+            )
             conn.commit()
         except Exception as e:
             print(e)
@@ -208,12 +212,19 @@ def submit_play():
     importlib.reload(judge)
     test_prog, test_output = judge.run_judge(q_pth, answer_text)
 
+    num_total_test = test_prog.result.testsRun
+    num_failed_test = len(test_prog.result.failures)
+    num_error_test = len(test_prog.result.errors)
+    judge_detail_shorten = "E: %d, F: %d (Total %d)" % (
+        num_error_test, num_failed_test, num_total_test)
+
     # insert result into db
     insert_result(
         name=player_name,
         submit=answer_text,
         codingtime="60",
         judge=str(test_prog.success),
+        judge_detail=judge_detail_shorten,
         gameid=str(game['id'])
     )
 
@@ -225,6 +236,8 @@ def submit_play():
         'example_ans': answer_text,
         'player_name': player_name,
         'result': test_output,
+        'passed': test_prog.success,
+        'judge_detail': [num_error_test, num_failed_test, num_total_test],
         'history': history
     }
 
@@ -318,7 +331,7 @@ def testdb():
         msg.append('there is no game in db')
     ret_val = insert_result(
         name='test_foo', submit='test_bar',
-        codingtime='57', judge='Pass', gameid='0'
+        codingtime='57', judge='True', judge_detail='', gameid='0'
     )
     if not ret_val:
         msg.append('Add result failed')
