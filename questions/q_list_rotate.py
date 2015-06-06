@@ -36,3 +36,9 @@ def test_answer_ex2():
     assert len(ans) == len(ref)
     for a, r in zip(ans, ref):
         assert a == r
+
+
+def test_empty():
+    ans = answer([])
+    assert len(ans) == 0
+    assert not ans
