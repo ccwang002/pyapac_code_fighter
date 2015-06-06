@@ -30,6 +30,12 @@ Examples
 
 '''
 
+def answer():
+    class Print:
+        "Your answer here"
+    return Print()
+
+
 def dump_output(program):
     from contextlib import redirect_stdout
     from io import StringIO
@@ -37,11 +43,6 @@ def dump_output(program):
     with redirect_stdout(StringIO()) as buff:
         exec(program)
         return buff.getvalue()
-
-
-def answer():
-    pass
-    return a_new_print_obj
 
 
 def test_orig():
