@@ -24,7 +24,7 @@ def answer(list_in):
 
 def test_answer_ex1():
     ref = [4, 99, 3]
-    ans = answer(ref)
+    ans = answer([3, 4, 99])
     assert len(ans) == len(ref)
     for a, r in zip(ans, ref):
         assert a == r
@@ -32,7 +32,7 @@ def test_answer_ex1():
 
 def test_answer_ex2():
     ref = ['b', 'c', 'a', 'zz']
-    ans = answer(ref)
+    ans = answer(['zz', 'b', 'c', 'a'])
     assert len(ans) == len(ref)
     for a, r in zip(ans, ref):
         assert a == r
