@@ -276,7 +276,7 @@ def judge_status():
     return {
         'q_name': q_name,
         'q_desc': q_desc,
-        'q_doc': '\n'.join(q_doc.splitlines()[3:13] + ['... (stripped)']),
+        'q_doc': '\n'.join(q_doc.splitlines()[2:13] + ['... (stripped)']),
         'results': submit_by_names,
         'latest_success': latest_success_submit
     }
