@@ -7,7 +7,7 @@ Given list a, b
 
 We'd like to remove item in a if item in b.
 
-However, we are failed. 
+However, we are failed.
 
 Please help us to fix the bug.
 
@@ -33,9 +33,17 @@ def answer(list_a, list_b):
 def test_answer_list():
     a = [1, 3, 4, 5, 6]
     b = [3, 4]
-    assert(answer(a, b) == [1,5,6] )
+    ref = [1, 5, 6]
+    ans = answer(a, b)
+    assert len(ref) == len(ans)
+    for r, a in zip(ref, ans):
+        assert r == a
 
 def test_answer_tuple():
-    a = ['c','d','e','f', 'g', 'k']
-    b = ['c','d','e']
-    assert(answer(a, b) == ['f', 'g', 'k'])
+    a = ['c', 'd', 'e', 'f', 'g', 'k']
+    b = ['c', 'd', 'e']
+    ref = ['f', 'g', 'k']
+    ans = answer(a, b)
+    assert len(ref) == len(ans)
+    for r, a in zip(ref, ans):
+        assert r == a

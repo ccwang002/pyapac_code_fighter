@@ -4,6 +4,14 @@
 <meta http-equiv="refresh" content="2">
 {% endblock meta %}
 
+{% block css %}
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/8.6/styles/default.min.css">
+{% endblock css %}
+
+{% block headjs %}
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/8.6/highlight.min.js"></script>
+{% endblock %}
+
 {% block content %}
 {% if msg %}
 <div class="row">
@@ -60,7 +68,7 @@
         </h3>
       </div>
       <div class="panel-body">
-        <pre>{{ result.submit }}</pre>
+        <pre><code class="language-python">{{ result.submit }}</code></pre>
       </div>
     </div>
     {% endfor %}
@@ -68,3 +76,7 @@
   {% endfor %}
 </div><!-- /.row -->
 {% endblock content %}
+
+{% block js %}
+<script>hljs.initHighlightingOnLoad();</script>
+{% endblock js %}
