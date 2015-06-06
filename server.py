@@ -1,6 +1,6 @@
 from bottle import (
     Bottle, jinja2_view, run,
-    static_file, request, default_app
+    static_file, request
 )
 from collections import OrderedDict
 from datetime import datetime
@@ -14,7 +14,7 @@ import random
 import re
 import sqlite3
 
-app = Bottle()
+app = application = Bottle()
 jinja2_template = partial(jinja2_view, template_lookup=['templates'])
 
 
@@ -328,5 +328,3 @@ def get_static_file(path):
 
 if __name__ == '__main__':
     run(app, host='localhost', port=8080, debug=True, reloader=True)
-else:
-    application = default_app()
