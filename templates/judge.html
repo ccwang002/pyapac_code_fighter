@@ -15,14 +15,26 @@
 </div><!-- /.row -->
 {% endif %}
 <div class="row">
+  <div class="col-sm-12">
+    <h1>Submission History</h1>
+  </div>
   {% for name, all_submissions in  results.items() %}
-  <ul>
+  <div class="col-sm-6">
+    <h2>{{ name }}</h2>
     {% for result in all_submissions %}
-    <li>{{ result.name }} | {{ result.judge }} | {{ result.timestamp }} </li>
-    <pre>{{ result.submit }}</pre>
+    <div class="panel {% if result.judge == 'True' %}panel-success{% else %}panel-danger{% endif %}">
+      <div class="panel-heading">
+        <h3 class="panel-title">
+          {% if result.judge == 'True' %}PASS{% else %}FAIL{% endif %}
+          <span class="pull-right">{{ result.timestamp|round(2) }} seconds ago</span>
+        </h3>
+      </div>
+      <div class="panel-body">
+        <pre>{{ result.submit }}</pre>
+      </div>
+    </div>
     {% endfor %}
-  </ul>
-  <hr>
+  </div>
   {% endfor %}
 </div><!-- /.row -->
 {% endblock content %}

@@ -74,7 +74,7 @@ def insert_games(games):
         conn = connect_db()
         conn.executemany(
             'INSERT INTO game(name, question, timestamp) '
-            'VALUES (?, ?, datetime("now", "localtime"))',
+            'VALUES (?, ?, datetime("now"))',
             map(operator.itemgetter('name', 'question'), games)
         )
         conn.commit()
@@ -117,7 +117,7 @@ def insert_result(name, submit, codingtime, judge, gameid):
     sql_cmd = (
         'INSERT INTO '
         'result(name, submit, codingtime, timestamp, judge, gameid) '
-        "VALUES (?, ?, ?, datetime('now', 'localtime'), ?, ?)"
+        "VALUES (?, ?, ?, datetime('now'), ?, ?)"
     )
     with connect_db() as conn:
         try:
@@ -233,15 +233,17 @@ def submit_play():
 @jinja2_template('judge.html')
 def judge_status():
     def parse_time_stamp(r):
-        return datetime.strptime(
-            r['timestamp'], "%Y-%m-%d %H:%M:%S"
-        )
+        r['timestamp'] = (now - datetime.strptime(
+            r['timestamp'],
+            "%Y-%m-%d %H:%M:%S"
+        )).total_seconds()
+        return r['timestamp']
 
     latest_game = get_games(limit=1)[0]
     results = get_results(latest_game['id'])
-
+    now = datetime.utcnow()
     submit_by_names = OrderedDict([
-        (k, sorted(v, key=parse_time_stamp))
+        (k, sorted(v, key=parse_time_stamp, reverse=True))
         for k, v in groupby(results, lambda r: r['name'])
     ])
 
@@ -251,7 +253,7 @@ def judge_status():
         last_success_time = None
         for submit in submit_history_time_asc:
             if submit['judge'] == 'True':
-                last_success_time = parse_time_stamp(submit)
+                last_success_time = submit['timestamp']
         latest_success_submit[name] = last_success_time
 
     return {
