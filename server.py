@@ -129,6 +129,16 @@ def insert_result(name, submit, codingtime, judge, gameid):
     return True
 
 
+def parse_question_folder():
+    """Parse all questions under questions/ and return file mapping."""
+    q_pths = Path('questions').glob('q_*.py')
+    extract_q_name = re.compile('^q_(.+)$').match
+    return {
+        extract_q_name(pth.stem).group(1): pth
+        for pth in q_pths
+    }
+
+
 @app.route('/', method='GET')
 @jinja2_template('index.html')
 def index(msg=''):
@@ -170,16 +180,6 @@ def reload_db():
         if db_existed:
             Path(_db_backup).unlink()
         return True
-
-
-def parse_question_folder():
-    """Parse all questions under questions/ and return file mapping."""
-    q_pths = Path('questions').glob('q_*.py')
-    extract_q_name = re.compile('^q_(.+)$').match
-    return {
-        extract_q_name(pth.stem).group(1): pth
-        for pth in q_pths
-    }
 
 
 @app.route('/play/', method='GET')
