@@ -18,8 +18,8 @@ app = application = Bottle()
 jinja2_template = partial(jinja2_view, template_lookup=['templates'])
 
 
-_db_name = 'codegame.db'
-_db_backup = 'codegame.prv.db'
+_db_name = '/tmp/codegame.db'
+_db_backup = '/tmp/codegame.prv.db'
 
 # default table schema
 _create_db_tables_sql = '''\
