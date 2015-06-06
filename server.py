@@ -37,6 +37,7 @@ CREATE TABLE result (
     codingtime TEXT,
     timestamp DATETIME DEFAULT NULL,
     judge TEXT,
+    judge_detail TEXT,
     gameid INTEGER,
     FOREIGN KEY(gameid) REFERENCES game(id)
 );
@@ -74,7 +75,7 @@ def insert_games(games):
         conn = connect_db()
         conn.executemany(
             'INSERT INTO game(name, question, timestamp) '
-            'VALUES (?, ?, datetime("now", "localtime"))',
+            'VALUES (?, ?, datetime("now"))',
             map(operator.itemgetter('name', 'question'), games)
         )
         conn.commit()
@@ -113,15 +114,18 @@ def get_results(gameid=''):
     return results
 
 # insert result each by each
-def insert_result(name, submit, codingtime, judge, gameid):
+def insert_result(name, submit, codingtime, judge, judge_detail, gameid):
     sql_cmd = (
-        'INSERT INTO '
-        'result(name, submit, codingtime, timestamp, judge, gameid) '
-        "VALUES (?, ?, ?, datetime('now', 'localtime'), ?, ?)"
+        'INSERT INTO result'
+        '(name, submit, codingtime, timestamp, judge, judge_detail, gameid) '
+        "VALUES (?, ?, ?, datetime('now'), ?, ?, ?)"
     )
     with connect_db() as conn:
         try:
-            conn.execute(sql_cmd, (name, submit, codingtime, judge, gameid))
+            conn.execute(
+                sql_cmd,
+                (name, submit, codingtime, judge, judge_detail, gameid)
+            )
             conn.commit()
         except Exception as e:
             print(e)
@@ -208,12 +212,19 @@ def submit_play():
     importlib.reload(judge)
     test_prog, test_output = judge.run_judge(q_pth, answer_text)
 
+    num_total_test = test_prog.result.testsRun
+    num_failed_test = len(test_prog.result.failures)
+    num_error_test = len(test_prog.result.errors)
+    judge_detail_shorten = "E: %d, F: %d (Total %d)" % (
+        num_error_test, num_failed_test, num_total_test)
+
     # insert result into db
     insert_result(
         name=player_name,
         submit=answer_text,
         codingtime="60",
         judge=str(test_prog.success),
+        judge_detail=judge_detail_shorten,
         gameid=str(game['id'])
     )
 
@@ -225,6 +236,8 @@ def submit_play():
         'example_ans': answer_text,
         'player_name': player_name,
         'result': test_output,
+        'passed': test_prog.success,
+        'judge_detail': [num_error_test, num_failed_test, num_total_test],
         'history': history
     }
 
@@ -233,13 +246,15 @@ def submit_play():
 @jinja2_template('judge.html')
 def judge_status():
     def parse_time_stamp(r):
-        return datetime.strptime(
-            r['timestamp'], "%Y-%m-%d %H:%M:%S"
-        )
+        r['timestamp'] = (now - datetime.strptime(
+            r['timestamp'],
+            "%Y-%m-%d %H:%M:%S"
+        )).total_seconds()
+        return r['timestamp']
 
     latest_game = get_games(limit=1)[0]
     results = get_results(latest_game['id'])
-
+    now = datetime.utcnow()
     submit_by_names = OrderedDict([
         (k, sorted(v, key=parse_time_stamp))
         for k, v in groupby(results, lambda r: r['name'])
@@ -251,10 +266,17 @@ def judge_status():
         last_success_time = None
         for submit in submit_history_time_asc:
             if submit['judge'] == 'True':
-                last_success_time = parse_time_stamp(submit)
+                last_success_time = submit['timestamp']
         latest_success_submit[name] = last_success_time
 
+    # game info
+    q_pth = parse_question_folder()[latest_game['name']]
+    q_name, q_desc, q_doc, q_ex_ans = judge.read_question(q_pth)
+
     return {
+        'q_name': q_name,
+        'q_desc': q_desc,
+        'q_doc': '\n'.join(q_doc.splitlines()[3:13] + ['... (stripped)']),
         'results': submit_by_names,
         'latest_success': latest_success_submit
     }
@@ -309,7 +331,7 @@ def testdb():
         msg.append('there is no game in db')
     ret_val = insert_result(
         name='test_foo', submit='test_bar',
-        codingtime='57', judge='Pass', gameid='0'
+        codingtime='57', judge='True', judge_detail='', gameid='0'
     )
     if not ret_val:
         msg.append('Add result failed')

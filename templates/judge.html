@@ -14,15 +14,57 @@
   </div><!-- /.col -->
 </div><!-- /.row -->
 {% endif %}
+
+<div class="row">
+  <div class="col-sm-12">
+    <h3>Question {{ q_name }} <small>{{ q_desc }}</small></h3>
+    <pre>{{ q_doc }}</pre>
+  </div>
+</div>
+<div class="row">
+  <div class="col-sm-8 col-sm-offset-2">
+    <h3>Scoreboard</h3>
+    <table class="table table-bordered">
+      <thead>
+        <tr>
+          <th>Users</th>
+          <th>Solved</th>
+          <th>Solved Time</th>
+          <th>Latest Details</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for name, last_success_time in latest_success.items() %}
+        <tr class="{% if last_success_time is not none %}success{% endif %}">
+          <th>{{ name }}</th>
+          <td>{% if last_success_time is none %}<span class="glyphicon glyphicon-remove"></span>{% else %}<span class="glyphicon glyphicon-ok"></span>{% endif %}</td>
+          <td>{% if last_success_time is none %}-{% else %}<b>{{ last_success_time|round(2) }}</b> seconds ago{% endif %}</td>
+          <td>{% if last_success_time is none %}{{ results.get(name).0.judge_detail }}{% endif %}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
 <div class="row">
   {% for name, all_submissions in  results.items() %}
-  <ul>
+  <div class="col-sm-6">
+    <h2>{{ name }}</h2>
     {% for result in all_submissions %}
-    <li>{{ result.name }} | {{ result.judge }} | {{ result.timestamp }} </li>
-    <pre>{{ result.submit }}</pre>
+    <div class="panel {% if result.judge == 'True' %}panel-success{% else %}panel-danger{% endif %}">
+      <div class="panel-heading">
+        <h3 class="panel-title">
+          {% if result.judge == 'True' %}PASS{% else %}FAIL {{ result.judge_detail }}{% endif %}
+          <span class="pull-right">{{ result.timestamp|round(2) }} seconds ago</span>
+        </h3>
+      </div>
+      <div class="panel-body">
+        <pre>{{ result.submit }}</pre>
+      </div>
+    </div>
     {% endfor %}
-  </ul>
-  <hr>
+  </div>
   {% endfor %}
 </div><!-- /.row -->
 {% endblock content %}
