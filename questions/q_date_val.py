@@ -1,4 +1,4 @@
-'''Question data_val: Date validation
+'''Question date_val: Date validation
 
 Description
 -----------
